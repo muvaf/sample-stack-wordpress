@@ -46,7 +46,7 @@ type WordpressInstanceReconciler struct {
 // +kubebuilder:rbac:groups=wordpress.samples.stacks.crossplane.io,resources=wordpressinstances/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=compute.crossplane.io,resources=kubernetesclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=database.crossplane.io,resources=mysqlinstances,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=workload.crossplane.io,resources=kubernetesapplication,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=workload.crossplane.io,resources=kubernetesapplications,verbs=get;list;watch;create;update;patch;delete
 
 func (r *WordpressInstanceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
@@ -61,20 +61,14 @@ func (r *WordpressInstanceReconciler) Reconcile(req ctrl.Request) (ctrl.Result, 
 	}
 
 	instanceUID := i.ObjectMeta.GetUID()
+	instanceNamespace := i.ObjectMeta.GetNamespace()
 
 	rawTemplate := `---
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: wordpresses
-  labels:
-    stack: sample-stack-wordpress
----
 apiVersion: compute.crossplane.io/v1alpha1
 kind: KubernetesCluster
 metadata:
   name: wordpress-cluster-{{ .UID }}
-  namespace: wordpresses
+  namespace: {{ .namespace }}
   labels:
     stack: sample-stack-wordpress
 spec:
@@ -85,7 +79,7 @@ apiVersion: database.crossplane.io/v1alpha1
 kind: MySQLInstance
 metadata:
   name: wordpress-mysql-{{ .UID }}
-  namespace: wordpresses
+  namespace: {{ .namespace }}
   labels:
     stack: sample-stack-wordpress
 spec:
@@ -100,7 +94,7 @@ apiVersion: workload.crossplane.io/v1alpha1
 kind: KubernetesApplication
 metadata:
   name: wordpress-app-{{ .UID }}
-  namespace: wordpresses
+  namespace: {{ .namespace }}
   labels:
     stack: sample-stack-wordpress
 spec:
@@ -208,7 +202,8 @@ spec:
 	var sb strings.Builder
 
 	data := map[string]interface{}{
-		"UID": instanceUID,
+		"UID":       instanceUID,
+		"namespace": instanceNamespace,
 	}
 
 	tmpl.Execute(&sb, data)

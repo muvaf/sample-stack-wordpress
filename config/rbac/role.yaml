@@ -53,7 +53,7 @@ rules:
 - apiGroups:
   - workload.crossplane.io
   resources:
-  - kubernetesapplication
+  - kubernetesapplications
   verbs:
   - create
   - delete
