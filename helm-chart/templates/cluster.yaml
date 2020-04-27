@@ -5,6 +5,8 @@ metadata:
   name: {{ .Release.Name }}-cluster
   labels:
     app: {{ .Release.Name }}
+  annotations:
+    crossplane.io/external-name: {{ .Release.Name }}
 spec:
   writeConnectionSecretToRef:
     name: {{ .Release.Name }}-cluster
